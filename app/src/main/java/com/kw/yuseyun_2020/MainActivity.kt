@@ -2,19 +2,21 @@ package com.kw.yuseyun_2020
 
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager.PERMISSION_GRANTED
-import android.graphics.Color
-import android.graphics.PointF
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
 import android.util.Log
-import android.util.Pair
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.widget.Toast
 import androidx.annotation.UiThread
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.updateLayoutParams
 import androidx.fragment.app.FragmentActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
@@ -22,7 +24,7 @@ import com.google.android.gms.location.LocationResult
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.*
 import com.naver.maps.map.overlay.Marker
-import com.naver.maps.map.util.MarkerIcons
+import com.sothree.slidinguppanel.SlidingUpPanelLayout
 import kotlinx.android.synthetic.main.activity_main.*
 
 
@@ -30,12 +32,23 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
 
     val permission_request = 99
 
+    var sentenceList = arrayListOf(
+        "[1]   dummy",
+        "[2]   dummy",
+        "[3]   dummy",
+        "[4]   dummy",
+        "[5]   dummy",
+        "[6]   dummy",
+        "[7]   dummy",
+        "[8]   dummy"
+    )
+
     //private val candidate: Candidate = Candidate()
     private lateinit var naverMap: NaverMap
 
     var permissions = arrayOf(
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        android.Manifest.permission.ACCESS_FINE_LOCATION,
+        android.Manifest.permission.ACCESS_COARSE_LOCATION
     )// 권한 가져오기
 
     override fun onCreate(savedInstanceState: Bundle?) { //액티비티가 최초 실행 되면 이곳을 수행한다.
@@ -48,16 +61,53 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         } else {
             ActivityCompat.requestPermissions(this, permissions, permission_request)
         }//권한 확인
+
+        val mAdapter = MainRvAdapter(this, sentenceList)
+        recyclerView.adapter = mAdapter
+
+        val lm = LinearLayoutManager(this)
+        recyclerView.layoutManager = lm
+        recyclerView.setHasFixedSize(true)
+
+        /*//main_panel.addPanelSlideListener(SlidingUpPanelLayout.SimplePanelSlideListener().onPanelStateChanged(View!, main_panel.panelState, main_panel.))
+        slidingLayout.addPanelSlideListener(object : SlidingUpPanelLayout.PanelSlideListener {
+            override fun onPanelSlide(panel: View?, slideOffset: Float) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun onPanelStateChanged(panel: View?, previousState: SlidingUpPanelLayout.PanelState?, newState: SlidingUpPanelLayout.PanelState?) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+        })
+
+        if (slidingLayout.panelState == SlidingUpPanelLayout.PanelState.HIDDEN) {
+            //리사이클러뷰 코드구현
+
+        }*/
+
     }
 
-    fun isPermitted(): Boolean {
+
+    /*private lateinit var slidingLayout: SlidingUpPanelLayout
+
+    // sliding up panel을 위한
+    private fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        return inflater.inflate(R.layout.activity_main, container, false).also {
+            slidingLayout = it.findViewById(R.id.main_panel)
+        }
+    }*/
+
+    //권한을 허락 받아야함
+    private fun isPermitted(): Boolean {
         for (perm in permissions) {
             if (ContextCompat.checkSelfPermission(this, perm) != PERMISSION_GRANTED) {
                 return false
             }
         }
         return true
-    }//권한을 허락 받아야함
+    }
+
+
 
     fun startProcess() {
         val fm = supportFragmentManager
@@ -72,8 +122,8 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     @UiThread
     override fun onMapReady(naverMap: NaverMap) {
         val cameraPosition = CameraPosition(
-                LatLng(37.618235, 127.061945),  // 위치 지정
-                16.0 // 줌 레벨
+            LatLng(37.618235, 127.061945),  // 위치 지정
+            16.0 // 줌 레벨
         )
         naverMap.cameraPosition = cameraPosition
         this.naverMap = naverMap
@@ -89,9 +139,9 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
     //맵을 생성할 준비가 되었을 때 가장 먼저 호출되는 오버라이드 메소드
 
     override fun onRequestPermissionsResult(
-            requestCode: Int,
-            permissions: Array<out String>,
-            grantResults: IntArray
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
     ) {
         when (requestCode) {
             permission_request -> {
@@ -106,6 +156,7 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
                     startProcess()
                 } else {
                     Toast.makeText(this, "권한을 승인해아지만 앱을사용가능", Toast.LENGTH_LONG).show()
+                    finish()
                     finish()
                 }
             }
@@ -138,9 +189,9 @@ class MainActivity : FragmentActivity(), OnMapReadyCallback {
         //location 요청 함수 호출 (locationRequest, locationCallback)
 
         fusedLocationProviderClient.requestLocationUpdates(
-                locationRequest,
-                locationCallback,
-                Looper.myLooper()
+            locationRequest,
+            locationCallback,
+            Looper.myLooper()
         )
     }//좌표계를 주기적으로 갱신
 
